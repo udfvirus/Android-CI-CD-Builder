@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     git \
     software-properties-common \
-    libgl1-mesa-glx \
+    libgl1 \
     openjdk-17-jdk \
     android-tools-adb \
     android-tools-fastboot \
