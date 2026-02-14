@@ -1,49 +1,60 @@
 FROM ubuntu:latest
 
-MAINTAINER javavirys@gmail.com
+LABEL maintainer="javavirys@gmail.com"
 USER root
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 ARG android_compile_sdk
 ARG android_build_tools
 ARG android_sdk_tools
 
-ENV SDK_URL="https://dl.google.com/android/repository/sdk-tools-linux-$android_sdk_tools.zip" \
-    ANDROID_HOME="/usr/local/android-sdk" \
-    ANDROID_VERSION=$android_compile_sdk \
-    PROJECT_NAME=$project_name \
-    ANDROID_BUILD_TOOLS_VERSION=$android_build_tools
+ENV ANDROID_HOME="/usr/local/android-sdk"
+ENV ANDROID_SDK_ROOT="/usr/local/android-sdk"
 
-ENV ANDROID_SDK=$ANDROID_HOME
+ENV PATH="${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/emulator:${PATH}"
 
-RUN export PATH=$ANDROID_SDK/emulator:$ANDROID_SDK/tools:$ANDROID_SDK/tools/bin:$PATH
+# RUN apt-get update && apt-get install -y \
+#     unzip \
+#     curl \
+#     wget \
+#     software-properties-common \
+#     libgl1-mesa-glx \
+#     openjdk-17-jdk \
+#     android-tools-adb \
+#     android-tools-fastboot \
+#     && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tzdata \
+    unzip \
+    curl \
+    wget \
+    git \
+    software-properties-common \
+    libgl1 \
+    openjdk-17-jdk \
+    android-tools-adb \
+    android-tools-fastboot \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get -y install unzip
-RUN apt-get -y install curl wget
-RUN apt-get -y install software-properties-common
-RUN apt-get -y install libgl1-mesa-glx
-RUN apt-get -y install openjdk-8-jdk
+RUN mkdir -p "$ANDROID_HOME/cmdline-tools" .android \
+    && curl -o sdk.zip "https://dl.google.com/android/repository/commandlinetools-linux-${android_sdk_tools}_latest.zip" \
+    && unzip sdk.zip -d "$ANDROID_HOME/cmdline-tools" \
+    && mv "$ANDROID_HOME/cmdline-tools/cmdline-tools" "$ANDROID_HOME/cmdline-tools/latest" \
+    && rm sdk.zip
 
-# Download Android SDK
-RUN mkdir "$ANDROID_HOME" .android \
-    && cd "$ANDROID_HOME" \
-    && curl -o sdk.zip $SDK_URL \
-    && unzip sdk.zip \
-    && rm sdk.zip \
-    && yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
+RUN yes | sdkmanager --licenses
 
-# Install Android Build Tool and Libraries
-RUN $ANDROID_HOME/tools/bin/sdkmanager --update | grep -v = || true
-RUN $ANDROID_HOME/tools/bin/sdkmanager "build-tools;${ANDROID_BUILD_TOOLS_VERSION}" \
-    "platforms;android-${ANDROID_VERSION}" \
-    "platform-tools" | grep -v = || true
+RUN sdkmanager "build-tools;${android_build_tools}" \
+    "platforms;android-${android_compile_sdk}" \
+    "platform-tools" "emulator" \
+    "system-images;android-29;google_apis;x86"
 
-RUN $ANDROID_HOME/tools/bin/sdkmanager emulator | grep -v = || true
-RUN $ANDROID_HOME/tools/bin/sdkmanager "system-images;android-29;google_apis;x86" | grep -v = || true
 
-RUN yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
+RUN avdmanager create avd -n mynexus \
+    -k "system-images;android-29;google_apis;x86" \
+    --tag "google_apis" \
+    --device "Nexus 5"
 
-RUN $ANDROID_HOME/tools/bin/avdmanager create avd -n mynexus -k "system-images;android-29;google_apis;x86" --tag "google_apis" --device "Nexus 5"
-
-RUN apt-get update && apt-get -y install android-tools-adb android-tools-fastboot
+RUN apt-get update && apt-get install -y openjdk-8-jdk && rm -rf /var/lib/apt/lists/*
