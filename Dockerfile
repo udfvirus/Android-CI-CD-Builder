@@ -3,6 +3,8 @@ FROM ubuntu:latest
 LABEL maintainer="javavirys@gmail.com"
 USER root
 
+ARG DEBIAN_FRONTEND=noninteractive
+
 ARG android_compile_sdk
 ARG android_build_tools
 ARG android_sdk_tools
@@ -12,10 +14,23 @@ ENV ANDROID_SDK_ROOT="/usr/local/android-sdk"
 
 ENV PATH="${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/emulator:${PATH}"
 
-RUN apt-get update && apt-get install -y \
+# RUN apt-get update && apt-get install -y \
+#     unzip \
+#     curl \
+#     wget \
+#     software-properties-common \
+#     libgl1-mesa-glx \
+#     openjdk-17-jdk \
+#     android-tools-adb \
+#     android-tools-fastboot \
+#     && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tzdata \
     unzip \
     curl \
     wget \
+    git \
     software-properties-common \
     libgl1-mesa-glx \
     openjdk-17-jdk \
