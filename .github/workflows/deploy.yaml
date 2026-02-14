@@ -8,9 +8,9 @@ jobs:
     - name: Publish to Registry
       uses: elgohr/Publish-Docker-Github-Action@master
       env:
-        android_compile_sdk: 33
-        android_build_tools: 30.0.3
-        android_sdk_tools: 4333796
+        android_compile_sdk: 36
+        android_build_tools: 36.0.2
+        android_sdk_tools: 14742923
       with:
         name: javavirys/android:${{ env.android_compile_sdk }}
         username: ${{ secrets.DOCKER_USERNAME }}
